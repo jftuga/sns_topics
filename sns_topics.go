@@ -17,7 +17,7 @@ import (
 	"sort"
 )
 
-const version string = "1.1.0"
+const version string = "1.1.1"
 
 func main() {
 	p := endpoints.AwsPartition()
@@ -28,19 +28,19 @@ func main() {
 		go getTopicsInRegion(ch, region, false) // change to true to output error messages
 	}
 
-	var topicResults []string
+	var allTopics []string
 	for i := 0; i < len(allRegions); i++ {
-		allTopics := <-ch
-		if len(allTopics) == 0 {
+		regionTopics := <-ch
+		if len(regionTopics) == 0 {
 			continue
 		}
-		for _, topic := range allTopics {
-			topicResults = append(topicResults, topic)
+		for _, topic := range regionTopics {
+			allTopics = append(allTopics, topic)
 		}
 	}
 
-	sort.Strings(topicResults)
-	for _, arn := range topicResults {
+	sort.Strings(allTopics)
+	for _, arn := range allTopics {
 		fmt.Println(arn)
 	}
 }
@@ -64,9 +64,9 @@ func getTopicsInRegion(ch chan []string, region string, showErrors bool) {
 		fmt.Println(region, err.Error())
 	}
 
-	var allTopics []string
+	var regionTopics []string
 	for _, t := range result.Topics {
-		allTopics = append(allTopics, *t.TopicArn)
+		regionTopics = append(regionTopics, *t.TopicArn)
 	}
-	ch <- allTopics
+	ch <- regionTopics
 }
